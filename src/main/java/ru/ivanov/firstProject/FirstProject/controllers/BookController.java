@@ -1,29 +1,43 @@
 package ru.ivanov.firstProject.FirstProject.controllers;
 
 import jakarta.validation.Valid;
+import org.springframework.boot.Banner;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.ivanov.firstProject.FirstProject.models.Book;
 import ru.ivanov.firstProject.FirstProject.models.Person;
-import ru.ivanov.firstProject.FirstProject.repositories.BookRepository;
-import ru.ivanov.firstProject.FirstProject.repositories.PeopleRepository;
+import ru.ivanov.firstProject.FirstProject.services.BookService;
+import ru.ivanov.firstProject.FirstProject.services.PeopleService;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/book")
 public class BookController {
-    private final BookRepository bookRepository;
-    private final PeopleRepository peopleRepository;
+    private final BookService bookService;
+    private final PeopleService peopleService;
 
-    public BookController(BookRepository bookRepository, PeopleRepository peopleRepository) {
-        this.bookRepository = bookRepository;
-        this.peopleRepository = peopleRepository;
+    public BookController(BookService bookService, PeopleService peopleService) {
+        this.bookService = bookService;
+        this.peopleService = peopleService;
     }
 
     @GetMapping()
-    public String showBooks(Model model) {
-        model.addAttribute("books", bookRepository.showAllBooks());
+    public String showBooks(@RequestParam(required = false) Integer page,
+                            @RequestParam(required = false) Integer books_per_page,
+                            @RequestParam(required = false) Boolean sort_by_year,
+                            Model model) {
+        if (page != null && books_per_page != null && sort_by_year != null && page >= 0 && books_per_page > 0) {
+            model.addAttribute("books", bookService.showAllBooks(page, books_per_page, sort_by_year));
+        } else if (page != null && books_per_page != null && page >= 0 && books_per_page > 0) {
+            model.addAttribute("books", bookService.showAllBooks(page, books_per_page));
+        } else if (sort_by_year != null) {
+            model.addAttribute("books", bookService.showAllBooks(sort_by_year));
+        } else {
+            model.addAttribute("books", bookService.showAllBooks());
+        }
         return "books/show";
     }
 
@@ -38,17 +52,17 @@ public class BookController {
         if (bindingResult.hasErrors()) {
             return "books/add"; // возврат на форму с ошибками
         }
-        bookRepository.addBook(book);
+        bookService.addBook(book);
         return "redirect:/book";
     }
 
     @GetMapping("{id}")
     public String bookInformation(Model model, @PathVariable int id, @ModelAttribute Person person) {
-        model.addAttribute("people", peopleRepository.showAllPeople());
-        model.addAttribute("book", bookRepository.index(id));
-        Book book = bookRepository.index(id);
-        if (book.getId_person() != null) {
-            Person person1 = peopleRepository.index(book.getId_person());
+        model.addAttribute("people", peopleService.showAllPeople());
+        model.addAttribute("book", bookService.index(id));
+        Book book = bookService.index(id);
+        if (bookService.getPerson(id) != null) {
+            Person person1 = bookService.getPerson(id);
             model.addAttribute("person", person1);
         }
         return "books/book";
@@ -56,7 +70,7 @@ public class BookController {
 
     @GetMapping("{id}/edit")
     public String editingMenu(Model model, @PathVariable int id) {
-        model.addAttribute("book", bookRepository.index(id));
+        model.addAttribute("book", bookService.index(id));
         return "books/edit";
     }
 
@@ -68,13 +82,13 @@ public class BookController {
         if (bindingResult.hasErrors()) {
             return "books/edit";
         }
-        bookRepository.updateBook(id, book);
+        bookService.updateBook(id, book);
         return "redirect:/book";
     }
 
     @DeleteMapping("{id}")
     public String deleteBook(@PathVariable int id) {
-        bookRepository.deleteBook(id);
+        bookService.deleteBook(id);
         return "redirect:/book";
     }
 
@@ -83,14 +97,24 @@ public class BookController {
     public String updateBookOwner(@ModelAttribute("book") Book book,
                                   @PathVariable int id,
                                   @RequestParam("personId") int personId) {
-        bookRepository.updatePerson(personId, id);
+        bookService.updatePerson(personId, id);
         return "redirect:/book";
     }
 
     @DeleteMapping("{id}/delete/person")
     public String deleteBookFromPerson(@PathVariable int id) {
-        bookRepository.deletePersonBook(id);
+        bookService.deletePersonBook(id);
         return "redirect:/book";
     }
 
+    @GetMapping("/search")
+    public String searchBook(@RequestParam(required = false) String nameOfBook,
+                             Model model) {
+        if (nameOfBook != null) {
+            List<Book> books = bookService.findBooksByName(nameOfBook);
+            model.addAttribute("books", books);
+        }
+
+        return "books/search";
+    }
 }

@@ -10,7 +10,8 @@
 <div th:if="${books!=null}">
     <h2>Книги:</h2>
 <div  th:each="book:${books}">
-    <p th:text="${book.getName()+', '+book.getAuthor()+','+book.getYear()}">Book's information</p>
+    <p th:if="${book.isTenDaysOver()==false}" th:style="'color: blue'" th:text="${book.getName()+', '+book.getAuthor()+','+book.getYear()}">Book's information</p>
+    <p th:if="${book.isTenDaysOver()==true}" th:style="'color: red'" th:text="${book.getName()+', '+book.getAuthor()+','+book.getYear()}">Book's information</p>
 </div>
 </div>
 <p th:if="${books==null}">Человек пока не взял ни одной книги</p>

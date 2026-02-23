@@ -8,7 +8,7 @@
 <p th:text="${book.getName()+', '+book.getAuthor()+','+book.getYear()}">Book information</p>
 <br/>
 
-<form th:method="PATCH" th:action="@{/book/{id}/edit/person(id=${book.getId_book()})}" th:if="${book.getId_person()==null}" th:object="${book}">
+<form th:method="PATCH" th:action="@{/book/{id}/edit/person(id=${book.getId_book()})}" th:if="${book.getOwner()==null}" th:object="${book}">
     <p>Книга свободна. Кому назначить ее?</p>
     <br/>
     <label for="personId">Выберите человека</label>
@@ -20,7 +20,7 @@
     <input type="submit" value="Назначить книгу">
 </form>
 <form th:method="DELETE" th:action="@{/book/{id}/delete/person(id=${book.getId_book()})}"
-      th:if="${book.getId_person()!=null}" th:object="${book}">
+      th:if="${book.getOwner()!=null}" th:object="${book}">
     <p th:text="'Книга сейчас у: '+${person.getFull_name()}"></p>
     <input type="submit" value="Освободить книгу">
 </form>

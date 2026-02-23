@@ -7,8 +7,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.ivanov.firstProject.FirstProject.models.Book;
 import ru.ivanov.firstProject.FirstProject.models.Person;
-import ru.ivanov.firstProject.FirstProject.repositories.BookRepository;
-import ru.ivanov.firstProject.FirstProject.repositories.PeopleRepository;
+import ru.ivanov.firstProject.FirstProject.services.PeopleService;
 import ru.ivanov.firstProject.FirstProject.util.PersonValidator;
 
 import java.util.List;
@@ -16,19 +15,17 @@ import java.util.List;
 @Controller
 @RequestMapping("/people")
 public class PersonController {
-    private final PeopleRepository peopleRepository;
-    private final BookRepository bookRepository;
     private final PersonValidator personValidator;
+    private final PeopleService peopleService;
 
-    public PersonController(PeopleRepository peopleRepository, BookRepository bookRepository, PersonValidator personValidator) {
-        this.peopleRepository = peopleRepository;
-        this.bookRepository = bookRepository;
+    public PersonController(PersonValidator personValidator, PeopleService peopleService) {
         this.personValidator = personValidator;
+        this.peopleService = peopleService;
     }
 
     @GetMapping()
     public String showPeople(Model model) {
-        model.addAttribute("people", peopleRepository.showAllPeople());
+        model.addAttribute("people", peopleService.showAllPeople());
         return "humans/show";
     }
 
@@ -44,14 +41,14 @@ public class PersonController {
         if (bindingResult.hasErrors()){
             return "humans/add";
         }
-        peopleRepository.addPerson(person);
+        peopleService.addPerson(person);
         return "redirect:/people";
     }
 
     @GetMapping("{id}")
     public String personInformation(Model model, @PathVariable int id) {
-        model.addAttribute("person", peopleRepository.index(id));
-        List<Book>books = bookRepository.findBook(id);
+        model.addAttribute("person", peopleService.index(id));
+        List<Book>books = peopleService.findBook(id);
         if (!books.isEmpty()){
             model.addAttribute("books", books);
         }else {
@@ -62,7 +59,7 @@ public class PersonController {
 
     @GetMapping("{id}/edit")
     public String editingMenu(Model model, @PathVariable int id) {
-        model.addAttribute("person", peopleRepository.index(id));
+        model.addAttribute("person", peopleService.index(id));
         return "humans/edit";
     }
 
@@ -74,13 +71,13 @@ public class PersonController {
         if (bindingResult.hasErrors()){
             return "humans/edit";
         }
-        peopleRepository.updatePerson(person, id);
+        peopleService.updatePerson(person, id);
         return "redirect:/people";
     }
 
     @DeleteMapping("{id}")
     public String deletePerson(@PathVariable int id){
-        peopleRepository.deletePerson(id);
+        peopleService.deletePerson(id);
         return "redirect:/people";
     }
 }
